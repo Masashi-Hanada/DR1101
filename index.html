@@ -359,31 +359,33 @@ canvas#seqCanvas{ display:block; width:100%; }
           <input type="file" id="importSsFile" accept=".json" style="display:none">
         </div>
         <div class="set-title">GLOBAL</div>
-        <div class="tog-row">
-          <span class="tog-lbl">MIX LOCK</span>
-          <button class="tog-btn" id="mixLockBtn">OFF</button>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin-bottom:6px;">
+          <div class="tog-row" style="margin:0">
+            <span class="tog-lbl">MIX LOCK</span>
+            <button class="tog-btn" id="mixLockBtn">OFF</button>
+          </div>
+          <div class="tog-row" style="margin:0">
+            <span class="tog-lbl">REVERB LOCK</span>
+            <button class="tog-btn" id="reverbLockBtn">OFF</button>
+          </div>
+          <div class="tog-row" style="margin:0">
+            <span class="tog-lbl">FX1 LOCK</span>
+            <button class="tog-btn" id="fx1LockBtn">OFF</button>
+          </div>
+          <div class="tog-row" style="margin:0">
+            <span class="tog-lbl">FX2 LOCK</span>
+            <button class="tog-btn" id="fx2LockBtn">OFF</button>
+          </div>
+          <div class="tog-row" style="margin:0">
+            <span class="tog-lbl">FX3 LOCK</span>
+            <button class="tog-btn" id="fx3LockBtn">OFF</button>
+          </div>
+          <div class="tog-row" style="margin:0">
+            <span class="tog-lbl">CLOCK OUT</span>
+            <button class="tog-btn" id="clockOutBtn">OFF</button>
+          </div>
         </div>
-        <div class="tog-row">
-          <span class="tog-lbl">REVERB LOCK</span>
-          <button class="tog-btn" id="reverbLockBtn">OFF</button>
-        </div>
-        <div class="tog-row">
-          <span class="tog-lbl">FX1 LOCK</span>
-          <button class="tog-btn" id="fx1LockBtn">OFF</button>
-        </div>
-        <div class="tog-row">
-          <span class="tog-lbl">FX2 LOCK</span>
-          <button class="tog-btn" id="fx2LockBtn">OFF</button>
-        </div>
-        <div class="tog-row">
-          <span class="tog-lbl">FX3 LOCK</span>
-          <button class="tog-btn" id="fx3LockBtn">OFF</button>
-        </div>
-        <div class="tog-row">
-          <span class="tog-lbl" data-for="clockOutBtn">CLOCK OUT</span>
-          <button class="tog-btn" id="clockOutBtn">OFF</button>
-        </div>
-        <div class="glob-row" style="margin-top:4px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
           <button class="io-btn" id="exportBtn">EXPORT JSON</button>
           <button class="io-btn" id="importBtn">IMPORT JSON</button>
           <button class="io-btn" id="wavBtn" style="background:linear-gradient(180deg,#d8d8d8,#c0c0c0);border-color:#aaa;color:#c00;box-shadow:0 2px 0 #888">WAV</button>
@@ -2210,7 +2212,7 @@ function buildSampSection(){
     b.addEventListener('click',()=>{
       pendingSampleIdx=+b.dataset.idx;
       const inp=document.createElement('input');
-      inp.type='file';inp.accept='audio/*';
+      inp.type='file';inp.accept='.wav,.mp3,.aif,.aiff,.ogg,.m4a';
       inp.style.display='none';
       document.body.appendChild(inp);
       inp.addEventListener('change',async e=>{
@@ -2563,6 +2565,7 @@ function runSongStep(){
   if(!songState.playing||songState.steps.length===0)return;
   const st=songState.steps[songState.cursor];
   state.bank=st.bank;state.pattern=st.pat;
+  loadWorkPat();
   const bpm=st.bpmMode==='global'?state.knobs.TEMPO.v:st.bpmMode==='input'?st.bpmVal:state.knobs.TEMPO.v;
   const steps=state.knobs.STEP.v;
   const rpt=st.rpt||1;
