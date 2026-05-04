@@ -244,7 +244,7 @@ canvas#seqCanvas{ display:block; width:100%; }
       <div class="mix-area"><table class="mix-table"><thead><tr><th>PART</th><th>VOL</th><th>TUNE</th><th>DECAY</th><th>TONE</th><th>SAT</th><th>REV</th><th>PAD</th></tr></thead><tbody id="mixBody"></tbody></table></div>
       
       <!-- REVERB 常時表示 -->
-      <div class="fx-inline-area" id="rvArea" style="background:#b0b0b0;padding:3px 8px;border-top:1px solid #999;">
+      <div class="fx-inline-area" id="rvArea" style="background:#b0b0b0;padding:1px 8px;border-top:1px solid #999;">
         <div style="display:flex;align-items:center;gap:6px;">
           <span style="font-size:9px;font-weight:bold;color:#333;">REVERB</span>
           <div style="display:flex;align-items:flex-start;gap:2px;">
@@ -269,7 +269,7 @@ canvas#seqCanvas{ display:block; width:100%; }
       </div>
 
       <!-- 行2: FX1 (COMP + EQ) -->
-      <div class="fx-inline-area" id="fx1Area" style="background:#aaa;padding:2px 8px 3px;border-top:1px solid #999;">
+      <div class="fx-inline-area" id="fx1Area" style="background:#aaa;padding:1px 8px;border-top:1px solid #999;">
         <div style="display:flex;align-items:flex-end;gap:0;">
           <div class="pk-row" id="compKnobs" style="gap:2px;margin:0;"></div>
           <div style="width:1px;background:#999;height:40px;margin:0 4px;flex-shrink:0;"></div>
@@ -611,8 +611,8 @@ const state={
     VOLUME:{v:80,min:0,max:100,def:80},
   },
   activeKnob:null,
-  mix:PARTS.map(()=>({vol:80,tune:64,decay:64,tone:50,sat:0,rev:0,muted:false,soloed:false})),
-  reverb:{type:'Plate',mode:'SCH',size:50,decay:50,gate:0},
+  mix:PARTS.map(()=>({vol:80,tune:52,decay:64,tone:50,sat:0,rev:0,muted:false,soloed:false})),
+  reverb:{type:'Plate',mode:'SCH',size:50,decay:50,gate:0,vol:50},
   fx1:{compOn:true,input:50,ratio:50,ratioIdx:0,attack:30,release:50,output:70,eqOn:true,low:50,mid:50,high:50},
   fx2:{bypass:false,type:'Isolator',k1:50,k2:50,k3:50},
   fx3:{phs:{on:false,rate:50},dly:{on:false,time:50},rng:{on:false,freq:50},wid:{on:false,amt:50}},
@@ -658,7 +658,7 @@ function _buildGraph(){
   eqMid=AC.createBiquadFilter();eqMid.type='peaking';eqMid.frequency.value=1000;eqMid.Q.value=1;eqMid.gain.value=0;
   eqHigh=AC.createBiquadFilter();eqHigh.type='highshelf';eqHigh.frequency.value=4000;eqHigh.gain.value=0;
   reverbConv=AC.createGain();reverbConv.gain.value=1; // Schroeder入力バス
-  reverbReturn=AC.createGain();reverbReturn.gain.value=0.7;
+  reverbReturn=AC.createGain();reverbReturn.gain.value=(state.reverb.vol??50)/100*0.8;
   _buildSchroeder();
   fx2In=AC.createGain();fx2In.gain.value=1;
   reverbReturn.connect(fx2In); // Isolator経由でmasterOutへ
@@ -714,6 +714,7 @@ function _buildGraph(){
   _fx3Nodes.phsFb=AC.createGain();_fx3Nodes.phsFb.gain.value=0;
   _fx3Nodes.phsAP[3].connect(_fx3Nodes.phsFb);_fx3Nodes.phsFb.connect(_fx3Nodes.phsAP[0]);
   // 位相反転用: gain=-1
+  _fx3Nodes.phsHpf=AC.createBiquadFilter();_fx3Nodes.phsHpf.type='highpass';_fx3Nodes.phsHpf.frequency.value=300;_fx3Nodes.phsHpf.Q.value=0.7;
   _fx3Nodes.phsInv=AC.createGain();_fx3Nodes.phsInv.gain.value=-1;
   _fx3Nodes.phsDry=AC.createGain();_fx3Nodes.phsDry.gain.value=1;
   _fx3Nodes.phsWet=AC.createGain();_fx3Nodes.phsWet.gain.value=0;
@@ -747,7 +748,8 @@ function _buildGraph(){
   // AllPass4段 → 位相反転 → phsWet → fx2In（dry+inverted=フランジャー的キャンセリング）
   fx3In.connect(_fx3Nodes.phsAP[0]);
   _fx3Nodes.phsAP[3].connect(_fx3Nodes.phsInv);
-  _fx3Nodes.phsInv.connect(_fx3Nodes.phsWet);
+  _fx3Nodes.phsInv.connect(_fx3Nodes.phsHpf);
+  _fx3Nodes.phsHpf.connect(_fx3Nodes.phsWet);
   _fx3Nodes.phsWet.connect(fx2In);
   // Delay
   fx3In.connect(_fx3Nodes.dlyDry);_fx3Nodes.dlyDry.connect(fx2In);
@@ -773,17 +775,17 @@ function _buildSchroeder(){
   const p=RV_P[rv.type]||RV_P.Plate;
   const sizeScale=0.7+rv.size/100*0.6;
   const gateBoost=rv.gate>0?1.14:1.0; // gate時は密なサステインのためfbを高く
-  const fbGain=Math.min(0.97,p.fb*(0.45+rv.decay/100*0.5)*gateBoost);
+  const fbGain=Math.min(0.88,p.fb*(0.4+rv.decay/100*0.45)*gateBoost);
   const dampFreq=p.damp*(0.25+rv.size/100*0.75);
 
   rvGateGain=AC.createGain();rvGateGain.gain.value=1;
   rvGateGain.connect(reverbReturn);
   _rvNetwork.push(rvGateGain);
 
-  const ap1=AC.createBiquadFilter();ap1.type='allpass';ap1.frequency.value=2200;ap1.Q.value=0.7;
-  const ap2=AC.createBiquadFilter();ap2.type='allpass';ap2.frequency.value=1100;ap2.Q.value=0.7;
-  const ap3=AC.createBiquadFilter();ap3.type='allpass';ap3.frequency.value=560; ap3.Q.value=0.7;
-  const ap4=AC.createBiquadFilter();ap4.type='allpass';ap4.frequency.value=270; ap4.Q.value=0.7;
+  const ap1=AC.createBiquadFilter();ap1.type='allpass';ap1.frequency.value=2200;ap1.Q.value=0.5;
+  const ap2=AC.createBiquadFilter();ap2.type='allpass';ap2.frequency.value=1100;ap2.Q.value=0.5;
+  const ap3=AC.createBiquadFilter();ap3.type='allpass';ap3.frequency.value=560; ap3.Q.value=0.5;
+  const ap4=AC.createBiquadFilter();ap4.type='allpass';ap4.frequency.value=270; ap4.Q.value=0.5;
   ap1.connect(ap2);ap2.connect(ap3);ap3.connect(ap4);ap4.connect(rvGateGain);
   _rvNetwork.push(ap1,ap2,ap3,ap4);
 
@@ -1032,7 +1034,7 @@ function triggerSound(part,vel=1.0){
     const idx=PARTS.indexOf(part);
     if(_silent(idx))return;
     const m=state.mix[idx];
-    const tune=m.tune-64;
+    const tune=m.tune-52;
     const decay=0.08+(m.decay/100)*2.4;
     const out=_partOut(idx);
     const t=ctx.currentTime;
@@ -1420,7 +1422,7 @@ function triggerSoundAt(part, vel=1.0, t=null){
     const idx=PARTS.indexOf(part);
     if(_silent(idx))return;
     const m=state.mix[idx];
-    const tune=m.tune-64;
+    const tune=m.tune-52;
     const decay=0.08+(m.decay/100)*2.4;
     const out=_partOut(idx);
     if(state.samples[idx].buffer){playSampleAt(idx,out,t,vel,decay,tune);return;}
@@ -1792,7 +1794,7 @@ function buildMix(){
     const m=state.mix[i];
     const tr=document.createElement('tr');
     tr.innerHTML=`<td><div class="mpart ${m.muted?'muted':''} ${m.soloed?'soloed':''}" data-idx="${i}">${p}</div></td>
-      <td>${mkMK('vol',i,m.vol,100)}</td><td>${mkMK('tune',i,m.tune,127)}</td>
+      <td>${mkMK('vol',i,m.vol,100)}</td><td>${mkMK('tune',i,m.tune,88)}</td>
       <td>${mkMK('decay',i,m.decay,100)}</td><td>${mkMK('tone',i,m.tone??50,100)}</td>
       <td>${mkMK('sat',i,m.sat,100)}</td><td>${mkMK('rev',i,m.rev,100)}</td>
       <td style="white-space:nowrap"><button class="mix-pad-btn" data-part="${PARTS[i]}" style="background:linear-gradient(180deg,#6bcfff,#3aa8e8);border:1px solid #1a70a8;border-radius:3px;color:#fff;font-size:8px;font-weight:bold;padding:2px 3px;cursor:pointer;width:60%;box-shadow:0 2px 0 #1a70a8;">${PARTS[i]}</button><button class="mix-pad-stop" data-part="${PARTS[i]}" style="background:linear-gradient(180deg,#d8d8d8,#b8b8b8);border:1px solid #999;border-radius:3px;color:#555;font-size:8px;font-weight:bold;padding:2px 3px;cursor:pointer;width:36%;margin-left:2px;box-shadow:0 2px 0 #888;">■</button></td>`;
@@ -1819,8 +1821,8 @@ function buildMix(){
   tb.querySelectorAll('.mk').forEach(el=>{
     let sy=null,sv=null,lt=0;
     const getVal=()=>{const v=state.mix[+el.dataset.idx][el.dataset.p];return v??( el.dataset.p==='tune'?64:50);};
-    const center=()=>el.dataset.p==='tune'?64:el.dataset.p==='tone'?50:50;
-    const setVal=(v)=>{const idx=+el.dataset.idx;const max=el.dataset.p==='tune'?127:100;state.mix[idx][el.dataset.p]=Math.max(0,Math.min(max,Math.round(v)));buildMix();_applyTone(idx);};
+    const center=()=>el.dataset.p==='tune'?52:el.dataset.p==='tone'?50:50;
+    const setVal=(v)=>{const idx=+el.dataset.idx;const max=el.dataset.p==='tune'?88:100;state.mix[idx][el.dataset.p]=Math.max(el.dataset.p==='tune'?16:0,Math.min(max,Math.round(v)));buildMix();_applyTone(idx);};
     el.addEventListener('touchstart',e=>{e.preventDefault();sy=e.touches[0].clientY;sv=getVal();},{passive:false});
     el.addEventListener('touchmove',e=>{e.preventDefault();if(sy===null)return;
       const sens=(el.dataset.p==='tune'||el.dataset.p==='sat')?3.0:1.5;
@@ -1930,13 +1932,40 @@ document.querySelectorAll('[data-rev-mode]').forEach(b=>{b.addEventListener('cli
 });});
 function buildRvKnobs(){
   const c=document.getElementById('rvKnobs');if(!c)return;c.innerHTML='';
-  c.style.cssText='display:flex;justify-content:center;gap:0;padding:0 10px;margin-bottom:0;';
-  [['Size','size'],['Decay','decay'],['Gate','gate']].forEach(([l,k],i)=>{
-    const w=mkPK(l,state.reverb[k],v=>{state.reverb[k]=v;rebuildReverb();});
-    if(i===0)w.style.marginRight='30px';
-    if(i===2)w.style.marginLeft='30px';
+  c.style.cssText='flex:1;position:relative;min-height:56px;';
+  [['Size','size'],['Decay','decay'],['Gate','gate'],['Vol','vol']].forEach(([l,k])=>{
+    const w=mkPK(l,state.reverb[k],v=>{
+      state.reverb[k]=v;
+      if(k==='vol'){if(reverbReturn)reverbReturn.gain.setTargetAtTime(v/100*0.8,AC.currentTime,.02);}
+      else rebuildReverb();
+    });
+    w.dataset.rvk=k;
+    w.style.position='absolute';
+    w.style.top='0';
     c.appendChild(w);
   });
+  setTimeout(_posRvKnobs,60);
+}
+function _posRvKnobs(){
+  const c=document.getElementById('rvKnobs');if(!c)return;
+  const cRect=c.getBoundingClientRect();
+  const eqKnobs=document.querySelectorAll('#eqKnobs .pk-wrap');
+  const targets={
+    size:document.querySelector('[data-fx="dly"]'),
+    decay:eqKnobs[0],
+    gate:eqKnobs[1],
+    vol:eqKnobs[2]
+  };
+  c.querySelectorAll('.pk-wrap[data-rvk]').forEach(knob=>{
+    const t=targets[knob.dataset.rvk];
+    if(!t)return;
+    const tRect=t.getBoundingClientRect();
+    const cx=tRect.left+tRect.width/2;
+    const kw=knob.offsetWidth||36;
+    knob.style.left=Math.max(0,cx-cRect.left-kw/2)+'px';
+  });
+  const maxH=Math.max(...[...c.querySelectorAll('.pk-wrap')].map(k=>k.offsetHeight||56));
+  c.style.minHeight=maxH+'px';
 }
 const compOO=document.getElementById('compOO'),eqOO=document.getElementById('eqOO');
 if(compOO)compOO.addEventListener('click',()=>{state.fx1.compOn=!state.fx1.compOn;compOO.classList.toggle('active',state.fx1.compOn);compOO.textContent=state.fx1.compOn?'ON':'OFF';if(AC)_applyFX1();});
@@ -2285,13 +2314,13 @@ document.getElementById('wavBtn').addEventListener('click',async()=>{
           const g=oac.createGain();g.gain.value=vol;g.connect(masterG);
           if(state.samples[pi].buffer){
             const src=oac.createBufferSource();src.buffer=state.samples[pi].buffer;
-            const r=Math.pow(2,(m.tune-64)/12);src.playbackRate.value=r;
+            const r=Math.pow(2,(m.tune-52)/12);src.playbackRate.value=r;
             const decay=0.08+(m.decay/100)*2.4;
             g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+Math.max(0.05,decay));
             src.connect(g);src.start(t);src.stop(t+Math.max(0.05,decay)+0.05);
           } else {
             // 合成音のスケジュール（簡易版）
-            const tune=m.tune-64,decay=0.08+(m.decay/100)*2.4;
+            const tune=m.tune-52,decay=0.08+(m.decay/100)*2.4;
             const r2=Math.pow(2,tune/12);
             if(part==='BD'){
               const o=oac.createOscillator();o.type='sine';
@@ -2672,7 +2701,7 @@ async function _ssLoadNow(s){
     }));
 
     // mix/fx復元
-    if(payload.mix)    state.mix=payload.mix.map(m=>({...m}));
+    if(payload.mix)    state.mix=payload.mix.map(m=>({...m,soloed:false,muted:false}));
     if(payload.reverb) state.reverb={...state.reverb,...payload.reverb};
     if(payload.fx1)    state.fx1={...state.fx1,...payload.fx1};
     if(payload.fx2)    state.fx2={...state.fx2,...payload.fx2};
@@ -2889,7 +2918,7 @@ buildFooter();
 buildSetting();
 _buildFX3Knobs();
 resizeCanvas();
-window.addEventListener('resize',resizeCanvas);
+window.addEventListener('resize',()=>{resizeCanvas();_posRvKnobs();});
 
 // 起動時: ユーザーデータがあれば復元、なければプリセット
 if(!_autoLoad()) loadAllPresets();
