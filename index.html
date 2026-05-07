@@ -7,9 +7,9 @@
 <style>
 :root{ --or:#ff6600; --lcd:#b8c8a0; --ldark:#2a3a1a; }
 *{ box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; user-select:none; touch-action:none; }
-html{ height:100%; overflow:hidden; }
-body{ height:100%; overflow:hidden; background:#333; display:flex; justify-content:center; }
-#app{ width:100%; max-width:480px; height:100%; display:flex; flex-direction:column; overflow:hidden; background:linear-gradient(180deg,#d4d4d4,#b8b8b8); }
+html{ height:100%; height:-webkit-fill-available; height:100dvh; overflow:hidden; }
+body{ height:100%; height:-webkit-fill-available; height:100dvh; overflow:hidden; background:#333; display:flex; justify-content:center; }
+#app{ width:100%; max-width:480px; height:100%; height:-webkit-fill-available; height:100dvh; display:flex; flex-direction:column; overflow:hidden; background:linear-gradient(180deg,#d4d4d4,#b8b8b8); }
 
 /* タブ → 一番上、SONGも同色 */
 .tab-bar{ display:flex; background:#222; flex-shrink:0; }
@@ -40,11 +40,12 @@ canvas#seqCanvas{ display:block; width:100%; }
 .knob-section{ background:linear-gradient(180deg,#c8c8c8,#b8b8b8); padding:6px 4px 4px; display:flex; align-items:center; gap:2px; border-top:1px solid #aaa; border-bottom:1px solid #888; flex-shrink:0; }
 
 /* 修正2: VELボタンをノブと同じ高さに揃える */
-.vel-btn-wrap{ display:flex; flex-direction:column; align-items:center; gap:3px; flex-shrink:0; width:30px; justify-content:center; margin-left:50px; }
-.vel-btn{ width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#ffcc88,#ff8800 60%,#cc5500); border:2px solid #aa4400; cursor:pointer; font-size:7px; font-weight:bold; color:#fff; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,.4),inset 0 1px 1px rgba(255,255,255,.5); }
-.vel-btn.active{ background:radial-gradient(circle at 35% 30%,#ffaa44,#ff6600 60%,#cc4400); border-color:#882200; }
-.flam-btn{ width:24px; height:24px; border-radius:50%; background:radial-gradient(circle at 35% 30%,#ddeeff,#bbccee 70%,#99aacc); border:2px solid #aabbdd; cursor:pointer; font-size:7px; font-weight:bold; color:#7788aa; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,.4),inset 0 1px 1px rgba(255,255,255,.5); }
-.flam-btn.active{ background:radial-gradient(circle at 35% 30%,#66bbff,#2277cc 70%,#1155aa); border-color:#4488cc; color:#fff; }
+.vel-btn-wrap{ display:flex; flex-direction:column; align-items:center; gap:2px; flex-shrink:0; width:36px; justify-content:center; margin-left:4px; }
+.vel-btn{ width:32px; height:32px; border-radius:50%; background:linear-gradient(180deg,#ffd9a0,#ffb85a); border:2px solid #cc8833; cursor:pointer; font-size:8px; font-weight:bold; color:#996600; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,.4),inset 0 1px 1px rgba(255,255,255,.5); }
+.vel-btn.active{ background:radial-gradient(circle at 35% 30%,#ffaa44,#ff6600 60%,#cc4400); color:#fff; border-color:#aa3300; }
+.flm-btn{ width:32px; height:32px; border-radius:50%; background:linear-gradient(180deg,#b8e8ff,#7ec8ee); border:2px solid #1a70a8; cursor:pointer; font-size:8px; font-weight:bold; color:#1a70a8; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 4px rgba(0,0,0,.4),inset 0 1px 1px rgba(255,255,255,.5); }
+.flm-btn.active{ background:linear-gradient(180deg,#6bcfff,#3aa8e8 60%,#1a70a8); color:#fff; border-color:#0a5088; }
+.vel-lbl{ font-size:7px; color:#555; text-align:center; }
 .knobs-row{ display:flex; flex:1; justify-content:space-evenly; align-items:center; padding:0 4px; }
 .knob-wrap{ display:flex; flex-direction:column; align-items:center; gap:1px; position:relative; padding:0 6px; }
 .knob-name{ font-size:9px; color:#444; font-weight:bold; letter-spacing:.3px; }
@@ -213,7 +214,10 @@ canvas#seqCanvas{ display:block; width:100%; }
   </div>
   <div class="header" style="display:flex;justify-content:space-between;align-items:center;">
     <span><span style="color:#ff66aa">eighty-seven</span> DR-1101</span>
-    <button id="helpBtn" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:50%;width:22px;height:22px;color:#fff;font-size:11px;font-weight:bold;cursor:pointer;flex-shrink:0;">?</button>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span id="mixSavedInd" style="font-size:8px;font-weight:bold;color:rgba(255,255,255,0.25);transition:color 0.5s;">● SAVED</span>
+      <button id="helpBtn" style="background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);border-radius:50%;width:22px;height:22px;color:#fff;font-size:11px;font-weight:bold;cursor:pointer;flex-shrink:0;">?</button>
+    </div>
   </div>
   <div class="chassis">
     <!-- SEQ -->
@@ -223,12 +227,12 @@ canvas#seqCanvas{ display:block; width:100%; }
         <div class="phbar" id="phbar"></div>
       </div>
       <!-- 修正2: knob-sectionのalign-itemsをcenterにしてVELボタンとノブを同じ高さに -->
-      <div class="knob-section" style="align-items:center;">
-        <div class="vel-btn-wrap">
-          <div class="vel-btn" id="velBtn" style="margin-top:10px;">VEL</div>
-          <div class="flam-btn" id="flamBtn" style="margin-top:15px;">FLM</div>
+      <div class="knob-section" style="align-items:center;position:relative;">
+        <div style="position:absolute;left:28px;top:50%;transform:translateY(-50%);display:flex;gap:16px;align-items:center;z-index:1;">
+          <div class="flm-btn" id="flmBtn">FLM</div>
+          <div class="vel-btn" id="velBtn">VEL</div>
         </div>
-        <div class="knobs-row" id="knobsRow"></div>
+        <div class="knobs-row" id="knobsRow" style="padding-left:112px;"></div>
       </div>
       <div class="slits"><div class="slit"></div><div class="slit"></div><div class="slit"></div><div class="slit"></div></div>
       <div class="pad-section"><div class="pad-grid" id="padGrid"></div></div>
@@ -236,7 +240,7 @@ canvas#seqCanvas{ display:block; width:100%; }
 
     <!-- MIX -->
     <div class="screen-page" id="page-mix">
-      <div class="mix-area"><table class="mix-table"><thead><tr><th>PART</th><th>VOL</th><th>TUNE</th><th>DECAY</th><th>TONE</th><th>SAT</th><th>REV</th><th>PAD</th></tr></thead><tbody id="mixBody"></tbody></table></div>
+      <div class="mix-area"><table class="mix-table"><thead><tr><th>PART</th><th>VOL</th><th>TUNE</th><th>DECAY</th><th>PAN</th><th>TONE</th><th>SAT</th><th>REV</th><th>PAD</th></tr></thead><tbody id="mixBody"></tbody></table></div>
       
       <!-- REVERB 常時表示 -->
       <div class="fx-inline-area" id="rvArea" style="background:#b0b0b0;padding:1px 8px;border-top:1px solid #999;">
@@ -440,7 +444,7 @@ canvas#seqCanvas{ display:block; width:100%; }
       <button class="fb fb-blue" id="clrBtn" style="flex:1">CLEAR</button>
       <button class="fb fb-pink" id="writeBtn" style="flex:1">WRITE</button>
       <button class="fb" id="fillBtn" style="flex:1;background:linear-gradient(180deg,#ffcc88,#ff8800);border-color:#cc5500;color:#fff;box-shadow:0 2px 0 #993300">FILL</button>
-      <button class="fb" id="bankBtn" style="flex:1;font-size:8px;background:linear-gradient(180deg,#666,#444);border-color:#222;box-shadow:0 2px 0 #000"><span id="bankLbl" style="color:#ff4488;font-weight:900;font-size:10px;letter-spacing:1px;text-shadow:0 0 6px currentColor,0 1px 0 rgba(255,255,255,.15)">BANK A</span></button>
+      <button class="fb" id="bankBtn" style="flex:1;font-size:8px;background:linear-gradient(180deg,#8855cc,#5522aa);border-color:#3311aa;box-shadow:0 2px 0 #1a0044"><span id="bankLbl" style="color:#ff4488;font-weight:900;font-size:10px;letter-spacing:1px;text-shadow:0 0 6px currentColor,0 1px 0 rgba(255,255,255,.15)">BANK A</span></button>
     </div>
     <!-- 3段目: Pattern 1〜8 -->
     <div class="footer-r3" id="patR1"></div>
@@ -542,29 +546,38 @@ const PAD_BOT=['BD','SD','T1','T2'];
 const BANKS=['A','B','C','D'];
 const MAX_STEPS=16;
 function mkPat(){return PARTS.map(()=>Array(MAX_STEPS).fill(0));}
+function mkFlamPat(){return PARTS.map(()=>Array(MAX_STEPS).fill(false));}
 function clone(o){return JSON.parse(JSON.stringify(o));}
 
 // 作業エリア: 編集中パターン（Writeで確定、切り替えで破棄）
 let _workPat=null;
+let _workFlamPat=null;
 let _workDirty=false;
 
 function getWorkPat(){
   if(!_workPat) _workPat=clone(state.banks[state.bank][state.pattern]);
   return _workPat;
 }
+function getWorkFlamPat(){
+  if(!_workFlamPat) _workFlamPat=clone(state.flamBanks[state.bank][state.pattern]);
+  return _workFlamPat;
+}
 function loadWorkPat(){
   _workPat=clone(state.banks[state.bank][state.pattern]);
+  _workFlamPat=clone(state.flamBanks[state.bank][state.pattern]);
   _workDirty=false;
   updWriteBtn();
 }
 function commitWorkPat(){
   if(_workPat) state.banks[state.bank][state.pattern]=clone(_workPat);
+  if(_workFlamPat) state.flamBanks[state.bank][state.pattern]=clone(_workFlamPat);
   _workDirty=false;
   updWriteBtn();
   _autoSave();
 }
 function discardWorkPat(){
   _workPat=clone(state.banks[state.bank][state.pattern]);
+  _workFlamPat=clone(state.flamBanks[state.bank][state.pattern]);
   _workDirty=false;
   updWriteBtn();
 }
@@ -617,6 +630,7 @@ function makePresetPat(i){
 const state={
   tab:'seq',bank:0,pattern:0,
   banks:Array.from({length:4},()=>Array.from({length:16},()=>mkPat())),
+  flamBanks:Array.from({length:4},()=>Array.from({length:16},()=>mkFlamPat())),
   history:[],copied:null,
   playing:false,recording:false,step:0,timer:null,
   velMode:false,flamMode:false,writePending:false,
@@ -627,7 +641,7 @@ const state={
     VOLUME:{v:80,min:0,max:100,def:80},
   },
   activeKnob:null,
-  mix:PARTS.map(()=>({vol:80,tune:52,decay:64,tone:50,sat:0,rev:0,muted:false,soloed:false})),
+  mix:PARTS.map((p,i)=>({vol:80,tune:52,decay:64,pan:i===3?-50:i===4?50:0,tone:50,sat:0,rev:0,muted:false,soloed:false})),
   reverb:{type:'Plate',mode:'SCH',size:50,decay:50,gate:0,vol:50},
   fx1:{compOn:true,input:50,ratio:50,ratioIdx:0,attack:30,release:50,output:70,eqOn:true,low:50,mid:50,high:50},
   fx2:{bypass:false,type:'Isolator',k1:50,k2:50,k3:50},
@@ -646,6 +660,7 @@ let eqLow=null,eqMid=null,eqHigh=null;
 let reverbConv=null,reverbReturn=null,fx2In=null,fx2Out=null,fx3In=null;
 let _clkMerger=null,_clkPulseIn=null; // CLOCK OUT用 最終段merger
 let _finalSplitter=null; // 最終段splitter（L/R分離用）
+let _panMixL=null,_panMixR=null,_panMixMerger=null; // PAN用ステレオバス
 let ohGain=null;
 let _fx2Network=[];
 let _rvNetwork=[],rvGateGain=null;
@@ -686,9 +701,9 @@ function _buildGraph(){
   // bypass時はisoBypassGainで直通、非bypass時はisoBypassGain=0でフィルター経由
   const isoBypass=AC.createGain();isoBypass.gain.value=0; // デフォルトOFF
 
-  // LOW: LPF×2 (200Hz, -24dB/oct)
-  const iL1=AC.createBiquadFilter();iL1.type='lowpass';iL1.frequency.value=200;iL1.Q.value=0.54;
-  const iL2=AC.createBiquadFilter();iL2.type='lowpass';iL2.frequency.value=200;iL2.Q.value=1.31;
+  // LOW: LPF×2 (80Hz, -24dB/oct) → よりスカスカ感を出すため低めに設定
+  const iL1=AC.createBiquadFilter();iL1.type='lowpass';iL1.frequency.value=80;iL1.Q.value=0.54;
+  const iL2=AC.createBiquadFilter();iL2.type='lowpass';iL2.frequency.value=80;iL2.Q.value=1.31;
   _isoLg=AC.createGain();_isoLg.gain.value=1;
   fx2In.connect(isoBypass);isoBypass.connect(fx2Out);
   fx2In.connect(iL1);iL1.connect(iL2);iL2.connect(_isoLg);_isoLg.connect(fx2Out);
@@ -714,14 +729,16 @@ function _buildGraph(){
   masterOut.connect(compInGain);compInGain.connect(compNode);compNode.connect(compOutGain);
   compOutGain.connect(_compFinalGain);_compFinalGain.connect(eqLow);eqLow.connect(eqMid);eqMid.connect(eqHigh);
 
-  // 最終段: L=2MIX(eqHigh)、R=クロックパルス専用
+  // 最終段: ステレオ対応
+  // eqHighはStereoPannerを通ったステレオ信号を受け取る
+  // ChannelSplitterでL/Rを分離し、CLOCKOUTはRchに重畳
   _clkMerger=AC.createChannelMerger(2);
-  _clkPulseIn=AC.createGain();_clkPulseIn.gain.value=0; // 初期はクロック無音
+  _clkPulseIn=AC.createGain();_clkPulseIn.gain.value=0;
   _finalSplitter=AC.createChannelSplitter(2);
 
   eqHigh.connect(_finalSplitter);
   _finalSplitter.connect(_clkMerger,0,0); // Lch → merger L
-  _finalSplitter.connect(_clkMerger,0,1); // Rch → merger R（CLOCK OFF時は2MIXをRにも出す）
+  _finalSplitter.connect(_clkMerger,1,1); // Rch → merger R（ステレオRchを正しく参照）
 
   _clkPulseIn.connect(_clkMerger,0,1);   // クロックパルス→ merger R
   _clkMerger.connect(AC.destination);
@@ -1000,7 +1017,9 @@ function _applyFX2(){
 
   if(t==='Isolator'){
     _isoBypass.gain.setValueAtTime(0,now);
-    _isoLg.gain.setTargetAtTime(k1*3.5,now,0.01);
+    // LOWは指数カーブ: 左端でほぼ無音、中央から上は急上昇
+    const lowGain=k1<0.01 ? 0.0001 : Math.pow(k1,2.5)*3.5;
+    _isoLg.gain.setTargetAtTime(lowGain,now,0.01);
     _isoMg.gain.setTargetAtTime(k2*2.5,now,0.01);
     _isoHg.gain.setTargetAtTime(k3*2.5,now,0.01);
   } else {
@@ -1061,14 +1080,10 @@ function _partOut(idx){
     tf.gain.value=(tone-50)/50*12;
     node.connect(tf);node=tf;
   }
-  // PAN
-  const panMap={3:-0.75,4:0.75};
-  if(panMap[idx]!==undefined){
-    const panner=AC.createStereoPanner();panner.pan.value=panMap[idx];
-    node.connect(panner);panner.connect(fx3In);
-  }else{
-    node.connect(fx3In);
-  }
+  // PAN: StereoPanner → fx3In（FXチェーン全体をステレオ信号として流す）
+  const panVal=m.pan??0;
+  const panner=AC.createStereoPanner();panner.pan.value=panVal/100;
+  node.connect(panner);panner.connect(fx3In);
   if(m.rev>0&&reverbConv){const s=AC.createGain();s.gain.value=(m.rev/100)*vol*1.5;g.connect(s);s.connect(reverbConv);}
   return g;
 }
@@ -1313,6 +1328,17 @@ function drawSeq(){
         else if(vel===2){ctx2.fillStyle='#555';ctx2.fill();ctx2.strokeStyle='#222';ctx2.lineWidth=1.5;ctx2.stroke();}
         else{ctx2.fillStyle='#000';ctx2.fill();ctx2.strokeStyle='#000';ctx2.lineWidth=1.5;ctx2.stroke();}
       }
+      // FLAMマーカー（右上 モノクロ点滅）
+      if(!dis&&_flamBlink&&getWorkFlamPat()[r][s]){
+        const ts=Math.min(cw,ch)*.32;
+        ctx2.fillStyle='#2a3a1a';
+        ctx2.beginPath();
+        ctx2.moveTo(x+cw-1,y+1);
+        ctx2.lineTo(x+cw-1-ts,y+1);
+        ctx2.lineTo(x+cw-1,y+1+ts);
+        ctx2.closePath();
+        ctx2.fill();
+      }
       if(state.playing&&s===state.step&&!dis){ctx2.fillStyle='rgba(255,150,0,.35)';ctx2.fillRect(x+.5,y+.5,cw-.5,ch-.5);}
     }
     // パート名エリア（左側）
@@ -1334,6 +1360,8 @@ function drawSeq(){
 
 // Canvas input
 let drawMode=null,isDraw=false;
+let _flamBlink=true;
+setInterval(()=>{_flamBlink=!_flamBlink;drawSeq();},350);
 function getCell(e){
   const rect=canvas.getBoundingClientRect();
   const x=(e.clientX-rect.left)*(canvas.width/rect.width);
@@ -1349,13 +1377,14 @@ function onDown(e){
   isDraw=true;saveHist();
   const cur=getWorkPat()[c.row][c.col];
   if(state.velMode){getWorkPat()[c.row][c.col]=cycleVel(cur);drawMode=null;}
+  else if(state.flamMode){const fp=getWorkFlamPat();fp[c.row][c.col]=!fp[c.row][c.col];drawMode=null;}
   else if(cur>0){getWorkPat()[c.row][c.col]=0;drawMode='rm';}
   else{getWorkPat()[c.row][c.col]=2;drawMode='add';}
   _workDirty=true;updWriteBtn();
   drawSeq();
 }
 function onMove(e){
-  if(!isDraw||state.velMode)return;
+  if(!isDraw||state.velMode||state.flamMode)return;
   const c=getCell(e);if(!c)return;
   if(drawMode==='add')getWorkPat()[c.row][c.col]=2;
   else if(drawMode==='rm')getWorkPat()[c.row][c.col]=0;
@@ -1374,7 +1403,7 @@ function cycleVel(v){return v===0?2:v===2?3:v===3?1:2;}
 // PLAYBACK
 // ================================================================
 function bpmMs(){return 60000/state.knobs.TEMPO.v/4;}
-function swingMs(s){return s%2===1?(bpmMs()*state.knobs.SWING.v/100*.5):0;}
+function swingMs(s){return s%2===1?(bpmMs()*(state.knobs.SWING.v/100)*0.25):0;}
 
 // ================================================================
 // LOOKAHEAD スケジューラー (Web Audio API精度)
@@ -1395,10 +1424,15 @@ function _scheduleStep(s, t){
   if(state.recording) playRecClick(s,t);
   if(state.clockOut)  _fireClockStep(t);
   let anyRev=false;
+  const fp=getWorkFlamPat();
   PARTS.forEach((p,i)=>{
     const v=getWorkPat()[i][s];
     if(v>0){
-      triggerSoundAt(p, v===1?.15:v===2?.6:1.0, t);
+      const vel=v===1?.15:v===2?.6:1.0;
+      if(fp[i][s]&&t-0.028>=(getAC?getAC().currentTime:0)){
+        triggerSoundAt(p,vel*0.35,t-0.028);
+      }
+      triggerSoundAt(p,vel,t);
       if(state.mix[i].rev>0) anyRev=true;
     }
   });
@@ -1789,12 +1823,12 @@ const mixFxStore=Array.from({length:4},()=>Array.from({length:16},()=>null));
 function _applyClockOutRouting(){
   if(!_finalSplitter||!_clkMerger||!_clkPulseIn) return;
   if(state.clockOut){
-    // CLOCK OUT ON: R ch は クロックパルス専用 → 2MIX の R 接続を切る
-    try{_finalSplitter.disconnect(_clkMerger,0,1);}catch(e){}
+    // CLOCK OUT ON: R ch はクロックパルス専用 → ステレオRch(出力1)の接続を切る
+    try{_finalSplitter.disconnect(_clkMerger,1,1);}catch(e){}
     _clkPulseIn.gain.setValueAtTime(1, AC.currentTime);
   } else {
-    // CLOCK OUT OFF: 通常ステレオ出力 → 2MIX を R にも流す
-    try{_finalSplitter.connect(_clkMerger,0,1);}catch(e){}
+    // CLOCK OUT OFF: 通常ステレオ出力 → ステレオRch(出力1)をmerger Rに接続
+    try{_finalSplitter.connect(_clkMerger,1,1);}catch(e){}
     _clkPulseIn.gain.setValueAtTime(0, AC.currentTime);
   }
 }
@@ -1935,7 +1969,7 @@ document.getElementById('recBtn').addEventListener('click',()=>{
     startPlay();
   }
 });
-document.getElementById('clrBtn').addEventListener('click',()=>{saveHist();_workPat=mkPat();_workDirty=true;updWriteBtn();drawSeq();});
+document.getElementById('clrBtn').addEventListener('click',()=>{saveHist();_workPat=mkPat();_workFlamPat=mkFlamPat();_workDirty=true;updWriteBtn();drawSeq();});
 // undoBtn削除済み
 document.getElementById('writeBtn').addEventListener('click',()=>{
   if(state.writePending){cancelWrite();return;}
@@ -1963,8 +1997,16 @@ document.getElementById('bankBtn').addEventListener('click',()=>{
     document.getElementById('bankLbl').style.color=BANK_COLORS[state.bank];
   }
 });
-document.getElementById('velBtn').addEventListener('click',()=>{state.velMode=!state.velMode;document.getElementById('velBtn').classList.toggle('active',state.velMode);});
-document.getElementById('flamBtn').addEventListener('click',()=>{state.flamMode=!state.flamMode;document.getElementById('flamBtn').classList.toggle('active',state.flamMode);});
+document.getElementById('velBtn').addEventListener('click',()=>{
+  state.velMode=!state.velMode;
+  document.getElementById('velBtn').classList.toggle('active',state.velMode);
+  if(state.velMode){state.flamMode=false;document.getElementById('flmBtn').classList.remove('active');}
+});
+document.getElementById('flmBtn').addEventListener('click',()=>{
+  state.flamMode=!state.flamMode;
+  document.getElementById('flmBtn').classList.toggle('active',state.flamMode);
+  if(state.flamMode){state.velMode=false;document.getElementById('velBtn').classList.remove('active');}
+});
 
 document.getElementById('tabBar').addEventListener('click',e=>{
   const b=e.target.closest('.tab-btn');if(!b)return;
@@ -1989,7 +2031,7 @@ function buildMix(){
     const tr=document.createElement('tr');
     tr.innerHTML=`<td><div class="mpart ${m.muted?'muted':''} ${m.soloed?'soloed':''}" data-idx="${i}">${p}</div></td>
       <td>${mkMK('vol',i,m.vol,100)}</td><td>${mkMK('tune',i,m.tune,88)}</td>
-      <td>${mkMK('decay',i,m.decay,100)}</td><td>${mkMK('tone',i,m.tone??50,100)}</td>
+      <td>${mkMK('decay',i,m.decay,100)}</td><td>${mkMKPan('pan',i,m.pan??0)}</td><td>${mkMK('tone',i,m.tone??50,100)}</td>
       <td>${mkMK('sat',i,m.sat,100)}</td><td>${mkMK('rev',i,m.rev,100)}</td>
       <td style="white-space:nowrap"><button class="mix-pad-btn" data-part="${PARTS[i]}" style="background:linear-gradient(180deg,#6bcfff,#3aa8e8);border:1px solid #1a70a8;border-radius:3px;color:#fff;font-size:8px;font-weight:bold;padding:2px 3px;cursor:pointer;width:60%;box-shadow:0 2px 0 #1a70a8;">${PARTS[i]}</button><button class="mix-pad-stop" data-part="${PARTS[i]}" style="background:linear-gradient(180deg,#d8d8d8,#b8b8b8);border:1px solid #999;border-radius:3px;color:#555;font-size:8px;font-weight:bold;padding:2px 3px;cursor:pointer;width:36%;margin-left:2px;box-shadow:0 2px 0 #888;">■</button></td>`;
     tb.appendChild(tr);
@@ -2014,20 +2056,28 @@ function buildMix(){
   });
   tb.querySelectorAll('.mk').forEach(el=>{
     let sy=null,sv=null,lt=0;
-    const getVal=()=>{const v=state.mix[+el.dataset.idx][el.dataset.p];return v??( el.dataset.p==='tune'?64:50);};
-    const center=()=>el.dataset.p==='tune'?52:el.dataset.p==='tone'?50:50;
+    const getVal=()=>{const v=state.mix[+el.dataset.idx][el.dataset.p];return v??( el.dataset.p==='tune'?64:el.dataset.p==='pan'?0:50);};
+    const center=()=>el.dataset.p==='tune'?52:el.dataset.p==='pan'?0:el.dataset.p==='tone'?50:50;
     const setVal=(v)=>{
       const idx=+el.dataset.idx;
       const p=el.dataset.p;
-      const max=p==='tune'?88:100;
-      const min=p==='tune'?16:0;
+      const isPan=p==='pan';
+      const max=isPan?100:p==='tune'?88:100;
+      const min=isPan?-100:p==='tune'?16:0;
       const val=Math.max(min,Math.min(max,Math.round(v)));
       state.mix[idx][p]=val;
       // buildMix()は呼ばずに表示だけ更新
       const ind=el.querySelector('.mk-ind');
-      const valEl=el.querySelector('.mk-val');
-      if(ind){const deg=-135+val/(max-min)*270;ind.style.transform=`translateX(-50%) translateY(-100%) rotate(${deg}deg)`;}
-      if(valEl) valEl.textContent=val;
+      const valEl=el.parentElement.querySelector('.mk-val');
+      if(ind){
+        const norm=isPan?(val+100)/200:val/(max-min);
+        const deg=-135+norm*270;
+        ind.style.transform=`translateX(-50%) translateY(-100%) rotate(${deg}deg)`;
+      }
+      if(valEl){
+        if(isPan) valEl.textContent=val===0?'C':val>0?'R'+val:'L'+Math.abs(val);
+        else valEl.textContent=val;
+      }
       _applyTone(idx);
       ssMixStore[_currentSs]=_deepCloneMix();
       _autoSave();
@@ -2115,6 +2165,12 @@ function buildMix(){
 function mkMK(param,idx,val,max){
   const norm=val/max,angle=-135+norm*270;
   return `<div class="mk-wrap"><div class="mk" data-p="${param}" data-idx="${idx}"><div class="mk-ind" style="transform:translateX(-50%) translateY(-100%) rotate(${angle}deg)"></div></div><div class="mk-val">${val}</div></div>`;
+}
+function mkMKPan(param,idx,val){
+  // val: -100〜+100, center=0
+  const norm=(val+100)/200, angle=-135+norm*270;
+  const lbl=val===0?'C':val>0?'R'+val:'L'+Math.abs(val);
+  return `<div class="mk-wrap"><div class="mk mk-pan" data-p="${param}" data-idx="${idx}" style="background:radial-gradient(circle at 35% 30%,#aaccff,#6699dd 70%,#4477bb);border-color:#88aadd;"><div class="mk-ind" style="transform:translateX(-50%) translateY(-100%) rotate(${angle}deg)"></div></div><div class="mk-val">${lbl}</div></div>`;
 }
 
 // ================================================================
@@ -2633,7 +2689,7 @@ document.getElementById('importFile').addEventListener('change',e=>{
     try{
       const d=JSON.parse(ev.target.result);
       if(d.banks) state.banks=d.banks;
-      if(d.mix)   state.mix=d.mix.map(m=>({vol:80,tune:52,decay:64,tone:50,sat:0,rev:0,muted:false,soloed:false,...m}));
+      if(d.mix)   state.mix=d.mix.map((m,i)=>({vol:80,tune:52,decay:64,pan:i===3?-50:i===4?50:0,tone:50,sat:0,rev:0,muted:false,soloed:false,...m}));
       if(d.knobs){Object.entries(d.knobs).forEach(([k,v])=>{if(state.knobs[k])state.knobs[k].v=v;});KNAMES.forEach(n=>updK(n));}
       if(d.reverb) state.reverb={...state.reverb,...d.reverb};
       if(d.fx1)    state.fx1={...state.fx1,...d.fx1};
@@ -2945,7 +3001,7 @@ function runSongStep(){
 function schedSong(bpm,totalSteps,curStep,onDone){
   if(!songState.playing)return;
   const secPerStep=(60/bpm/4);
-  const swing=curStep%2===1?(secPerStep*state.knobs.SWING.v/100*.5):0;
+  const swing=curStep%2===1?(secPerStep*state.knobs.SWING.v/100*0.25):0;
   const t=getAC().currentTime;
   _scheduleStep(curStep,t);
   updPH();drawSeq();
@@ -3358,11 +3414,12 @@ _ssUpdateFooter();
 
 
 
-const _AS_KEY='dr1101_autosave';
+const _AS_KEY='dr1101_autosave_pcm4';
 function _autoSave(){
   try{
     localStorage.setItem(_AS_KEY,JSON.stringify({
       banks:state.banks,
+      flamBanks:state.flamBanks,
       mix:state.mix,
       reverb:state.reverb,
       fx1:state.fx1,
@@ -3381,6 +3438,9 @@ function _autoSave(){
         clockRate:document.getElementById('clockRateSel')?.value||'1',
       }
     }));
+    // SAVEDインジケーターを光らせる
+    const ind=document.getElementById('mixSavedInd');
+    if(ind){ind.style.color='#88ff44';clearTimeout(ind._t);ind._t=setTimeout(()=>{ind.style.color='#888';},800);}
   }catch(e){}
 }
 function _autoLoad(){
@@ -3389,7 +3449,8 @@ function _autoLoad(){
     if(!raw) return false;
     const d=JSON.parse(raw);
     if(d.banks) state.banks=d.banks;
-    if(d.mix)   state.mix=d.mix.map(m=>({vol:80,tune:52,decay:64,tone:50,sat:0,rev:0,muted:false,soloed:false,...m}));
+    if(d.flamBanks) state.flamBanks=d.flamBanks;
+    if(d.mix)   state.mix=d.mix.map((m,i)=>({vol:80,tune:52,decay:64,pan:i===3?-50:i===4?50:0,tone:50,sat:0,rev:0,muted:false,soloed:false,...m}));
     if(d.reverb) state.reverb={...state.reverb,...d.reverb};
     if(d.fx1)    state.fx1={...state.fx1,...d.fx1};
     if(d.fx2)    state.fx2={...state.fx2,...d.fx2};
@@ -3429,6 +3490,9 @@ updBankLbl();
 _buildFX3Knobs();
 resizeCanvas();
 window.addEventListener('resize',()=>{resizeCanvas();_posRvKnobs();});
+window.addEventListener('orientationchange',()=>{
+  setTimeout(()=>{ window.scrollTo(0,0); document.getElementById('app').scrollTop=0; },300);
+});
 
 // 起動時: ユーザーデータがあれば復元、なければプリセット
 if(!_autoLoad()) loadAllPresets();
